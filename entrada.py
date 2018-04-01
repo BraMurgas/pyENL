@@ -79,7 +79,7 @@ def entradaTexto(ecuaciones, pyENL_timeout, varsObj=None, tol=None, method='hybr
     if method not in methods:
         raise Exception('El método de resolución no está listado, ver ayuda.')
     for ie, eqn in enumerate(ecuaciones):
-        if ((eqn != '') and ('{' not in eqn)) and ('<<' not in eqn):
+        if ((eqn.replace(' ','').replace('\t', '') != '') and ('{' not in eqn)) and ('<<' not in eqn):
             expresion = eqn.replace(" ", "")
             expresion = expresion.replace('\t','')
             # Capacidad de interpretar pow
@@ -127,9 +127,7 @@ def entradaTexto(ecuaciones, pyENL_timeout, varsObj=None, tol=None, method='hybr
         # especificado por los corchetes {}
         for cadaEqn in lista:
             varAux = cadaEqn
-            A_reemplazar = [objeto.name, '-', '(', ')']
-            for termino_areemplazar in A_reemplazar:
-                varAux = varAux.replace(termino_areemplazar, '')
+            varAux = varAux.replace(objeto.name + '-', '')
             try:
                 objeto.guess = eval(varAux)
             except:

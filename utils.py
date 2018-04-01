@@ -33,12 +33,14 @@ class configFile:
         self.format = '{:,.3}'
         self.tol = 1e-4
         self.timeout = 10
+        self.sFontUI = 'Monospace,12,-1,5,25,0,0,0,0,0'
+        self.cuDir = os.path.expanduser('~')
         try:
             f = open(filename, 'rb')
             texto_config = f.read().decode("utf-8").splitlines()
             f.close()
             for i, elm in enumerate(texto_config):
-                valor = elm.split("=")[1].replace(" ", "")
+                valor = elm.split("=")[1]#.replace(" ", "")
                 if 'lang' in elm:
                     self.lang = valor
                 if 'method' in elm:
@@ -49,22 +51,16 @@ class configFile:
                     self.tol = float(valor)
                 if 'timeout' in elm:
                     self.timeout = float(valor)
+                if 'font' in elm:
+                    self.sFontUI = valor
+                if 'cuDir' in elm:
+                    if os.path.exists(valor): #se confirma que la ruta si existe, si no se deja la de usuario
+                        self.cuDir = valor
         except:
             # Guardar con la configuración!
             pass
 
-    def guardar_config(self, filename):
-        '''
-        Guarda la configuración actual del objeto en el archivo filename
-        '''
-        g = open(filename, 'wb')
-        for item in self.items:
-            # TODO Corregir asignaciones para guardar
-            print("propiedad = self." + item)
-            exec("propiedad = self." + item)
-            texto = item + "=" + propiedad + "\n"
-            g.write(texto.encode('utf-8'))
-        g.close()
+    
 
 
 def ajustes(texto):
@@ -169,7 +165,7 @@ def variables(texto_eqn):
     for cambio in cambios:
         texto_eqn = texto_eqn.replace(cambio, '1+')
     # Acá eliminar lo que hay entre corchetes []
-    texto_eqn = re.sub(r'\[[^)]*\]', '', texto_eqn) 
+    texto_eqn = re.sub(r'\[[^)]*\]', '', texto_eqn)
     # Reemplazos:
     A_reemplazar = ['(', ')', '-', '*', '/', '^', ',']
     for termino in A_reemplazar:
@@ -220,15 +216,15 @@ def variables_string(texto):
                     to_del.append(i)
             except:
                 pass
-    for num in to_del:
-        texto.pop(num)
+    for i, num in enumerate(to_del):
+        texto.pop(num-i)
     # Segunda iteración para reemplazos
     pattern = re.compile('|'.join(dicc.keys()))
     for i, eqn in enumerate(texto):
         if '<<' not in eqn:
             try:
                 result = pattern.sub(lambda x: dicc[x.group()], eqn)
-                print(eqn)
+                # print(eqn)
                 # El reemplazo:
                 texto[i] = result
             except:
@@ -250,7 +246,7 @@ def cantidadEqnVar(texto_caja):
     ecuaciones = 0
     lista = []
     for eqn in texto_fcn:
-        if ((eqn != '') and ('{' not in eqn)) and ('<<' not in eqn):
+        if ((eqn.replace(' ','').replace('\t', '') != '') and ('{' not in eqn)) and ('<<' not in eqn):
             ecuaciones += 1
             expresion = eqn.replace(" ", "")
             expresion = expresion.replace("\t", "")
@@ -267,6 +263,22 @@ def cantidadEqnVar(texto_caja):
     # Regresa el número de ecuaciones y de variables.
     return ecuaciones, lista_vars
 
+def actualizar_directorio(cuDir):
+    '''Guarda en config.txt la ultima ruta de la carpeta donde se abrió o guardó un archivo'''
+    # se guarda la ultima carpeta usada para cuando se vuelva a abrir el programa
+    f = open('config.txt','r+')
+    data =f.read().splitlines() #se crea una lista con cada linea del txt
+    if 'cuDir' in f.read(): # si existe cuDir en el txt solo se reemplaza en la posicion "i" donde se encuentre
+        for i,fila in enumerate(data):
+            if 'cuDir' in fila:
+                data[i] = 'cuDir=' + str(cuDir) + '\n'
+    else: # de lo contrario lo crea en la ultima linea (la ultima linea está vacía)
+        data[-1] = 'cuDir=' + str(cuDir) + '\n'
+
+    f.seek(0) # Posiciona el cursor en el inicio
+    f.truncate() #Borra todo el txt para sobreescribirlo sin problemas
+    f.write('\n'.join(data))
+    f.close()
 
 def funcion_a(Diccionario):
     '''Asociación de ecuaciones con variables (opción aleatoria)'''

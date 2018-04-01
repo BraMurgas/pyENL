@@ -8,7 +8,10 @@ from fluids import control_valve as cv
 from CoolProp.CoolProp import PropsSI as proppyENL
 from CoolProp.CoolProp import HAPropsSI as haproppyENP
 from pint import _DEFAULT_REGISTRY as u
-u.load_definitions("units.txt")
+try:
+    u.load_definitions("units.txt")
+except:
+    pass
 parse = u.parse_units
 unit_pyENL = u.m
 
@@ -77,7 +80,9 @@ def prop(des, *args):
            try:
              nuevoarg = arg.to(dicc_coolprop[args[i-1]])
            except:
-             raise Exception("Argumento de prop() debe tener unidades")
+             # Si no tiene unidades, asignar auto dimensionless
+             # raise Exception("Argumento de prop() debe tener unidades")
+             nuevoarg = arg * u.m/u.m
            query = query + str(nuevoarg.magnitude) + ','
         elif i == len(args) - 1:
             query += '"' + arg + '")'
